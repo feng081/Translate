@@ -8,7 +8,7 @@
 
 <br>
 
-<img src="./assets/cover.png" width="86%" alt="论文翻译助手界面预览">
+<img src="./assets/settings.png" width="86%" alt="论文翻译助手界面预览">
 
 <br><br>
 
@@ -51,7 +51,7 @@
 
 ### 设置界面
 
-<img src="./assets/settings.png" width="90%" alt="设置界面">
+<img src="./assets/cover.png" width="90%" alt="设置界面">
 
 ---
 
