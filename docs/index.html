@@ -1,1 +1,719 @@
 
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>论文翻译助手 | PDF / arXiv 智能翻译工具</title>
+  <meta name="description" content="论文翻译助手是一款支持 PDF 与 arXiv 论文翻译、原译文对照阅读、多任务翻译、暂停继续和术语表管理的桌面工具。" />
+
+  <style>
+    :root {
+      --bg: #f7f9ff;
+      --card: rgba(255, 255, 255, 0.86);
+      --text: #101828;
+      --muted: #667085;
+      --primary: #2f6bff;
+      --primary-dark: #1f56db;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --green: #16a34a;
+      --orange: #f97316;
+      --border: rgba(47, 107, 255, 0.14);
+      --shadow: 0 24px 70px rgba(31, 86, 219, 0.12);
+      --radius: 28px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(47, 107, 255, 0.16), transparent 30%),
+        radial-gradient(circle at 90% 12%, rgba(139, 92, 246, 0.16), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 45%, #ffffff 100%);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      position: sticky;
+      top: 16px;
+      z-index: 10;
+      margin-top: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.74);
+      backdrop-filter: blur(18px);
+      border-radius: 999px;
+      box-shadow: 0 12px 36px rgba(31, 86, 219, 0.08);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 22px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      box-shadow: 0 12px 24px rgba(47, 107, 255, 0.28);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 14px;
+      color: #475467;
+      font-weight: 700;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      padding: 82px 0 46px;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(47, 107, 255, 0.08);
+      border: 1px solid rgba(47, 107, 255, 0.16);
+      color: var(--primary-dark);
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-size: clamp(42px, 6.6vw, 82px);
+      line-height: 1.05;
+      letter-spacing: -0.06em;
+      margin-bottom: 24px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #0f172a 0%, #2f6bff 48%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-desc {
+      width: min(780px, 100%);
+      margin: 0 auto 34px;
+      color: var(--muted);
+      font-size: 19px;
+      font-weight: 600;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 46px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 50px;
+      padding: 0 24px;
+      border-radius: 999px;
+      font-weight: 900;
+      transition: 0.25s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      box-shadow: 0 18px 42px rgba(47, 107, 255, 0.26);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 48px rgba(47, 107, 255, 0.34);
+    }
+
+    .btn-secondary {
+      color: var(--primary-dark);
+      background: white;
+      border-color: rgba(47, 107, 255, 0.18);
+      box-shadow: 0 14px 34px rgba(31, 86, 219, 0.08);
+    }
+
+    .hero-card {
+      position: relative;
+      border-radius: 34px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.58));
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, rgba(47, 107, 255, 0.18), rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.08));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-card img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: block;
+      border-radius: 24px;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      background: white;
+    }
+
+    .section {
+      padding: 74px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 38px;
+    }
+
+    .section-title h2 {
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .features {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .feature-card {
+      padding: 24px;
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 46px rgba(31, 86, 219, 0.07);
+      backdrop-filter: blur(16px);
+      transition: 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 54px rgba(31, 86, 219, 0.12);
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 23px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(139, 92, 246, 0.12));
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 14.5px;
+      font-weight: 600;
+    }
+
+    .screenshots {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .shot {
+      display: grid;
+      grid-template-columns: 0.9fr 1.5fr;
+      gap: 28px;
+      align-items: center;
+      padding: 24px;
+      border-radius: 34px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(31, 86, 219, 0.08);
+    }
+
+    .shot:nth-child(even) {
+      grid-template-columns: 1.5fr 0.9fr;
+    }
+
+    .shot:nth-child(even) .shot-text {
+      order: 2;
+    }
+
+    .shot:nth-child(even) .shot-image {
+      order: 1;
+    }
+
+    .shot-tag {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      background: rgba(47, 107, 255, 0.08);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .shot h3 {
+      font-size: 28px;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.03em;
+    }
+
+    .shot p {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .shot-image {
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.09);
+    }
+
+    .shot-image img {
+      width: 100%;
+      display: block;
+    }
+
+    .steps {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .step {
+      position: relative;
+      padding: 26px;
+      border-radius: var(--radius);
+      background: white;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 46px rgba(31, 86, 219, 0.07);
+    }
+
+    .step-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+    }
+
+    .step h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 14.5px;
+      font-weight: 600;
+    }
+
+    .download {
+      padding: 52px;
+      border-radius: 36px;
+      text-align: center;
+      color: white;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.22), transparent 30%),
+        linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #db2777 100%);
+      box-shadow: 0 24px 70px rgba(47, 107, 255, 0.25);
+    }
+
+    .download h2 {
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+
+    .download p {
+      opacity: 0.9;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .download .btn {
+      background: white;
+      color: var(--primary-dark);
+    }
+
+    .faq {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .faq-item {
+      padding: 24px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 46px rgba(31, 86, 219, 0.06);
+    }
+
+    .faq-item h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .faq-item p {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+
+    footer {
+      padding: 48px 0 60px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    @media (max-width: 980px) {
+      .features,
+      .steps,
+      .faq {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .shot,
+      .shot:nth-child(even) {
+        grid-template-columns: 1fr;
+      }
+
+      .shot:nth-child(even) .shot-text,
+      .shot:nth-child(even) .shot-image {
+        order: initial;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 54px;
+      }
+
+      .features,
+      .steps,
+      .faq {
+        grid-template-columns: 1fr;
+      }
+
+      .download {
+        padding: 34px 22px;
+      }
+
+      .shot {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="page nav">
+    <div class="nav-inner">
+      <a class="brand" href="#">
+        <span class="logo">译</span>
+        <span>论文翻译助手</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#screenshots">预览</a>
+        <a href="#usage">使用</a>
+        <a href="#download">下载</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page hero">
+      <div class="badge">✨ PDF / arXiv 科研论文智能翻译工具</div>
+
+      <h1>
+        让英文论文阅读<br />
+        <span class="gradient-text">更轻松、更高效</span>
+      </h1>
+
+      <p class="hero-desc">
+        论文翻译助手支持本地 PDF 翻译、arXiv 自动下载翻译、原文译文左右对照、多任务翻译、暂停继续和术语表管理，适合科研阅读、文献调研和论文精读场景。
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/feng081/Translate/releases/latest" target="_blank">
+          ⬇ 下载最新版
+        </a>
+        <a class="btn btn-secondary" href="#usage">
+          查看使用说明
+        </a>
+      </div>
+
+      <div class="hero-card">
+        <img src="https://raw.githubusercontent.com/feng081/Translate/main/assets/cover.png" alt="论文翻译助手界面预览" />
+      </div>
+    </section>
+
+    <section id="features" class="page section">
+      <div class="section-title">
+        <h2>核心功能</h2>
+        <p>围绕科研论文翻译和阅读流程设计，从导入、翻译到对照阅读一站完成。</p>
+      </div>
+
+      <div class="grid features">
+        <div class="feature-card">
+          <div class="icon">📄</div>
+          <h3>PDF 翻译</h3>
+          <p>选择本地 PDF 文件后自动解析并翻译，生成独立论文文件夹。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🔗</div>
+          <h3>arXiv 翻译</h3>
+          <p>输入 arXiv 链接或编号，自动下载论文并进入翻译流程。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🪟</div>
+          <h3>原译文对照</h3>
+          <p>支持原文 PDF 与译文 PDF 左右并排展示，方便精读对照。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">⚡</div>
+          <h3>多任务翻译</h3>
+          <p>PDF 和 arXiv 任务统一显示，可同时翻译多个论文任务。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">⏸️</div>
+          <h3>暂停继续</h3>
+          <p>翻译过程中可以暂停，之后从当前任务状态继续执行。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🧾</div>
+          <h3>术语表管理</h3>
+          <p>维护专业术语译法，提高同一领域论文翻译的一致性。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🔐</div>
+          <h3>自定义 API</h3>
+          <p>支持配置 API Key、模型名称、Base URL、超时和请求间隔。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">📁</div>
+          <h3>输出目录</h3>
+          <p>默认保存到用户目录 translate 文件夹，也支持自定义输出位置。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenshots" class="page section">
+      <div class="section-title">
+        <h2>界面预览</h2>
+        <p>清晰的桌面端交互，适合长时间论文阅读和多任务翻译。</p>
+      </div>
+
+      <div class="grid screenshots">
+        <div class="shot">
+          <div class="shot-text">
+            <span class="shot-tag">PDF Translation</span>
+            <h3>本地 PDF 一键翻译</h3>
+            <p>
+              导入论文后自动进入翻译流程，显示整体进度、当前任务和详细步骤。支持暂停、继续和停止。
+            </p>
+          </div>
+          <div class="shot-image">
+            <img src="https://raw.githubusercontent.com/feng081/Translate/main/assets/pdf.png" alt="PDF 翻译界面" />
+          </div>
+        </div>
+
+        <div class="shot">
+          <div class="shot-text">
+            <span class="shot-tag">arXiv Translation</span>
+            <h3>arXiv 论文自动下载翻译</h3>
+            <p>
+              输入 arXiv 链接或编号即可解析论文信息，自动下载 PDF 并翻译，适合快速阅读新论文。
+            </p>
+          </div>
+          <div class="shot-image">
+            <img src="https://raw.githubusercontent.com/feng081/Translate/main/assets/arxiv.png" alt="arXiv 翻译界面" />
+          </div>
+        </div>
+
+        <div class="shot">
+          <div class="shot-text">
+            <span class="shot-tag">Settings</span>
+            <h3>灵活的模型与导出设置</h3>
+            <p>
+              可配置 API 提供商、Base URL、API Key、模型名称、输出目录和翻译参数，适配不同模型服务。
+            </p>
+          </div>
+          <div class="shot-image">
+            <img src="https://raw.githubusercontent.com/feng081/Translate/main/assets/settings.png" alt="设置界面" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="usage" class="page section">
+      <div class="section-title">
+        <h2>使用流程</h2>
+        <p>下载、配置、导入、翻译，四步完成论文翻译。</p>
+      </div>
+
+      <div class="grid steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>下载软件</h3>
+          <p>进入 Releases 页面下载 Windows 压缩包，解压后双击运行 exe。</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>配置 API</h3>
+          <p>进入设置页面，填写 API Key、Base URL、模型名称等参数。</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>导入论文</h3>
+          <p>选择本地 PDF，或输入 arXiv 链接 / 论文编号进行解析。</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>查看译文</h3>
+          <p>翻译完成后打开论文文件夹，查看原文 PDF 与译文 PDF。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="page section">
+      <div class="download">
+        <h2>开始使用论文翻译助手</h2>
+        <p>适用于 Windows 桌面端。下载后解压运行，首次使用请先配置大模型 API。</p>
+        <a class="btn" href="https://github.com/feng081/Translate/releases/latest" target="_blank">
+          ⬇ 前往 Releases 下载
+        </a>
+      </div>
+    </section>
+
+    <section class="page section">
+      <div class="section-title">
+        <h2>常见问题</h2>
+        <p>使用前可以先了解这些注意事项。</p>
+      </div>
+
+      <div class="grid faq">
+        <div class="faq-item">
+          <h3>需要配置 API Key 吗？</h3>
+          <p>需要。软件通过大模型 API 进行翻译，首次使用前需要在设置中填写 API Key 和模型信息。</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>译文保存在哪里？</h3>
+          <p>默认保存在 C:\Users\当前用户\translate，也可以在设置中的导出目录里修改。</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>支持多个任务同时翻译吗？</h3>
+          <p>支持。PDF 和 arXiv 任务会统一显示在左侧正在翻译列表中，可以点击切换查看进度。</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>暂停和停止会立即生效吗？</h3>
+          <p>如果任务正在等待一次 API 请求返回，暂停或停止会在当前请求结束后的安全点生效。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page">
+    <p>© 2026 论文翻译助手 · 面向科研阅读的 PDF / arXiv 智能翻译工具</p>
+  </footer>
+</body>
+</html>
